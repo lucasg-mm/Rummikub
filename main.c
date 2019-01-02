@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 typedef struct pedrinhas{
 	char numero;
@@ -34,12 +35,14 @@ void inicializa_pilha(PEDRA** pilha){
 	return;
 }
 
-void le_baralho(PEDRA** pilha){  //Lê o baralho do arquivo .txt.
+int le_baralho(PEDRA** pilha){  //Lê o baralho do arquivo .txt.
 	FILE* arquivo;
 	PEDRA* novo;
 	int c;
 	int flag;
+	int num;
 	
+	num = 0;
 	c = 0;
 	flag = 0;
 	
@@ -68,9 +71,53 @@ void le_baralho(PEDRA** pilha){  //Lê o baralho do arquivo .txt.
 		
 		novo->prox = *pilha;  //Insere o elemento no começo da lista.
 		*pilha = novo;
+		num++;
 	}
 	
 	fclose(arquivo);
+	
+	return num;
+}
+
+void embaralha(PEDRA** pilha, int num){  //Passa as pedras para um array; Embaralha o array; Reconstrói a lista na ordem do array.
+	PEDRA* percorre;
+	PEDRA** aleatorio;
+	int i;
+	
+	percorre = *pilha;
+	
+	aleatorio = (PEDRA**)calloc(num, sizeof(PEDRA*));  //Aloca dinamicamente o array.
+	
+	if(aleatorio == NULL){
+		cabecalho();
+		printf("##ERRO DE ALOCAÇÃO!!");
+		getchar();
+		exit(1);
+	}
+	
+	for(i = 0; i < num; i++){  //Passa as pedras para o array.
+		aleatorio[i] = percorre;
+		percorre = percorre->prox;
+	}
+	
+	srand((unsigned)time(NULL));  //Embaralha o array. (MÉTODO BEN PFAFF).
+    for (i = 0; i < num - 1; i++) {
+        size_t j = i + rand() / (RAND_MAX / (num - i) + 1);
+        PEDRA* t = aleatorio[j];
+        aleatorio[j] = aleatorio[i];
+        aleatorio[i] = t;
+	}	
+	
+	*pilha = aleatorio[0];  //Reconectando o array.
+	
+	for(i = 0; i < num; i++){
+		if(i == (num-1)){
+			aleatorio[i]->prox = NULL;
+			break;
+		}
+		
+		aleatorio[i]->prox = aleatorio[i+1];
+	}
 	
 	return;
 }
@@ -79,6 +126,7 @@ int main(void){
 //Declaração de variáveis------------------------------------------------	
 	int num_jogadores;  //Guarda o número de jogadores que estão participando.
 	int i;
+	int num;  //Guarda o número de pedras na pilha.
 	PEDRA** jogadores;  //Trata-se de um vetor de ponteiros. Esse vetor guarda listas encadeadas que corres pondem as mãos de cada jogador.
 	PEDRA* pilha;  //Aponta para o primeiro elemento da pilha de pedras.
 	
@@ -107,9 +155,9 @@ int main(void){
 	
 	inicializa_jogadores(jogadores, num_jogadores);  //Inicializa as mãos dos jogadores. 
 	
-	le_baralho(&pilha);  //Função para ler baralho em texto. (INSERIR NA LISTA)
+	num = le_baralho(&pilha);  //Função para ler baralho em texto. 
 	
-	//~~FUNÇÃO PARA EMBARALHAR. 
+	embaralha(&pilha, num);  //Função para embaralhar.
 	
 //-----------------------------------------------------------------------
 //Cada jogador pega uma pedra do monte. Aquele que pegar a pedra com valor mais alto fica determinado como o primeiro a jogar.
