@@ -123,7 +123,7 @@ void embaralha(PEDRA** pilha, int num){  //Passa as pedras para um array; Embara
 	return;
 }
 
-void inteiro(PEDRA** pilha){
+void inteiro(PEDRA** pilha){  //Converte char para int nos structs.
 	PEDRA* percorre;
 	
 	percorre = *pilha;
@@ -132,8 +132,17 @@ void inteiro(PEDRA** pilha){
 		percorre->inteiro = strtol(&percorre->numero, NULL, 16);
 		
 		percorre = percorre->prox;
-	}  //Obs: vai ficar com lixo de memória no campo dos inteiros quando for coringa.
+	}  //Obs: vai ficar com lixo de memória no campo dos inteiros quando for coringa. (vira 0)
 	
+	return;
+}
+
+void deleta_pilha(PEDRA** pilha){  //Deleta apenas o primeiro nó da pilha.
+	PEDRA* no;
+	
+	no = *pilha;
+	*pilha = no->prox;
+	free(no);
 	return;
 }
 
@@ -162,13 +171,12 @@ void distribui(PEDRA** pilha, int num_jogadores, PEDRA** jogadores, int p_um){
 		   novo->cor = percorre->cor;
 		   novo->inteiro = percorre->inteiro;	   
 			   
-		   //(~FUNÇÃO PARA DELETAR~).
-			   
 		   novo->prox = jogadores[p_um - 1];
 		   jogadores[p_um - 1] = novo;
 			   
 		   j++;
 		   percorre = percorre->prox;
+		   deleta_pilha(pilha);
 		}
 		if(p_um < num_jogadores){	
 		   p_um++;
@@ -183,25 +191,59 @@ void distribui(PEDRA** pilha, int num_jogadores, PEDRA** jogadores, int p_um){
 
 void imprime_pilha(PEDRA* pilha){  //**Apenas para TESTE**
 	cabecalho();
+	
+	printf("\n-->PILHA DE PEDRAS\n");
+	
 	while(pilha != NULL){
-		printf("\nNUMERO: %d      COR: %c", pilha->inteiro, pilha->cor);
+		printf("NUMERO: %d      COR: %c\n", pilha->inteiro, pilha->cor);
 		pilha = pilha->prox;
 	}
 	return;
 }
 
-void imprime_mao(PEDRA** jogadores){  //Imprime a mão dos jogadores.
-	cabecalho()
+void imprime_mao(PEDRA** jogadores, int num){  //**Apenas para TESTE**
+	int i;
+	PEDRA* percorre;
+	
+	cabecalho();
+		
+	for(i = 0; i < num; i++){
+		printf("\n-->MÃO DO JOGADOR %d\n", i+1);
+		percorre = jogadores[i];
+		
+		while(percorre != NULL){
+			printf("NUMERO: %d      COR: %c\n", percorre->inteiro, percorre->cor);
+			percorre = percorre->prox;
+		}
+	}
+	
+	return;
+}
+
+void imprime_idv(PEDRA** jogadores, int num){  //Imprime a mão individual.
+	PEDRA* percorre;
+	
+	percorre = jogadores[num - 1];
+	
+	printf("\n>>SUAS PEDRAS:");
+	
+	while(percorre != NULL){
+		printf(" %c%c", percorre->numero, percorre->cor);
+		percorre = percorre->prox;
+	}
+	return;
 }
 
 int main(void){		
 //Declaração de variáveis------------------------------------------------	
 	int num_jogadores;  //Guarda o número de jogadores que estão participando.
 	int i;
+	int opcao;
 	int num;  //Guarda o número de pedras na pilha.
 	int p_um;  //Indica qual jogador será o primeiro.
 	PEDRA** jogadores;  //Trata-se de um vetor de ponteiros. Esse vetor guarda listas encadeadas que corres pondem as mãos de cada jogador.
 	PEDRA* pilha;  //Aponta para o primeiro elemento da pilha de pedras.
+	PEDRA* novo;
 	
 //Atribuições e funções iniciais------------------------------------------------------------
 	inicializa_pilha(&pilha);	
@@ -297,13 +339,61 @@ int main(void){
 //14 peças são distribuídas para cada jogador----------------------------
 	
 	distribui(&pilha, num_jogadores, jogadores, p_um);
-	//imprime.mao(jogadores);
-    imprime_pilha(pilha);
-//-----------------------------------------------------------------------
-//Cada jogador deve jogar uma ou mais séries de no mínimo 30 pontos. Se não puder fazer isso, ele deve recolher uma pedra e passar a sua vez.
+	//imprime_mao(jogadores, num_jogadores);  **Somente são usados para teste**
+    //imprime_pilha(pilha);
+	
+//Cada jogador deve jogar uma ou mais séries de no mínimo 30 pontos.-----
+//Se não puder fazer isso, ele deve recolher uma pedra e passar a sua vez.
 
-//-----------------------------------------------------------------------
-//O jogo (loop).
+	for(i = 0; i < num_jogadores; i++){
+		cabecalho();
+		imprime_idv(jogadores, p_um);  //Mostra a mão do jogador atual.
+		printf("\n\n>>JOGADOR %d, escolha uma opção:\n", p_um);
+		printf("(1)Baixar pedras\n");
+		printf("(2)Comprar pedra\n");
+		scanf("%d", &opcao);
+		
+		
+		switch(opcao){
+			case 1:
+				
+				break;
+			case 2: //Compra e passa a vez.				
+				novo = (PEDRA*)calloc(1, sizeof(PEDRA));
+				
+				if(novo == NULL){
+					cabecalho();
+					printf("\n##ERRO DE ALOCACAO!\n");
+					getchar();
+					exit(1);
+				}
+				
+				novo->numero = pilha->numero;
+				novo->cor =  pilha->cor;
+				novo->inteiro =	 pilha->inteiro;
+				
+				novo->prox = jogadores[p_um - 1];
+		        jogadores[p_um - 1] = novo;
+				
+				deleta_pilha(&pilha);
+					
+				break;
+			default:  //Se digitou a opção errada.
+				exit(1);
+				
+				break;
+		}
+		
+		
+		if(p_um < num_jogadores){	
+		   p_um++;
+		}
+		else{	//	 p_um >= num_jogadores			
+		   p_um = 1;
+		}
+	}
+	
+//O jogo (loop)----------------------------------------------------------
 
 //-----------------------------------------------------------------------
 //Dá free nas listas e exibe mensagem de vitória (FIM).	
