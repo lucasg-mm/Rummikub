@@ -234,19 +234,152 @@ void imprime_idv(PEDRA** jogadores, int num){  //Imprime a mão individual.
 	return;
 }
 
+void imprime_tab(PEDRA* tab){  //Imprime o tabuleiro.
+	printf("\n>>TABULEIRO:");
+	
+	while(tab != NULL){
+		if(tab->numero != 'X'){
+			printf(" %c%c", tab->numero, tab->cor);
+		}
+		else{
+			printf(" ||");
+		}
+		
+		tab = tab->prox;
+	}
+	
+	return;
+}
+
+int jogada(PEDRA** tab, PEDRA** jogadores, int p_um, char* ins, int modo){  //##NOTA DO P: Separar a valida em uma função!
+	int numero;
+	int contador;
+	int ptos = 0;
+	int i = 0;
+	int j = 0;
+	int vale;  //Diz se a jogada foi válida. 
+	int grupo = 0;
+	int seq = 0;
+	int quantos = 0;
+	PEDRA* percorre;
+	
+	while(ins[quantos] != '\n'){
+		quantos++;
+	}
+	
+	if(modo == 0){  //Abertura.
+		//Valida a jogada.
+		//-->Grupo:
+		
+		while(ins[i] != '\0'){  //Mesmo número, cores diferentes (min 3 / max 4).
+			if(ins[i] == ins[0]){  //Certifica a parte do "mesmo número".
+				grupo = 1;
+			}
+			else{                                           
+				grupo = 0;
+				break;
+			}
+			i = i + 3;
+		}
+		
+		//Certifica a parte do "cores diferentes".
+		if(grupo == 1){
+		    for(i = 1; i < quantos; i = i + 3){
+		        for(j = i + 3; j < quantos; j = j + 3){
+				    if(ins[i] != ins[j]){
+					    grupo = 1;
+				    }
+				    else{
+					    grupo = 0;
+				    }
+			    }
+		    }
+		}
+			
+		//-->Sequência:
+		//Certifica se têm cores iguais 
+		i = 1;
+		while(ins[i] != '\0'){
+			if(ins[1] == ins[i]){
+				seq = 1;
+			}
+			else{
+				seq = 0;
+				break;
+			}
+			i = i + 3;
+		}
+		
+		//Certifica a parte da "sequência numérica": 
+		
+		i = 0;
+		if(seq == 1){
+		    while(ins[i] != '\0'){  //Muda o condicional!!
+			    if((ins[i+3] == ins[i] + 1) || (ins[i+3] == '\0')){
+				    seq = 1;
+			    }
+			    else{
+				    seq = 0;
+				    break;
+			    }
+			    i = i + 3;
+		    }						
+		}
+				
+		//-->Por fim:
+		
+		vale = grupo | seq;
+		
+		if(vale == 0){
+			return vale;  //Se a jogada for inválida.
+		}
+		
+		//Realiza a jogada (mexe nas listas)
+		/*while(ins[i] != '\n'){
+			percorre = jogadores[p_um - 1];
+			contador = 0;
+			numero = atoi(&ins[i]);
+			
+			while(contador < numero){  //Chegar à pedra da instrução (como um vetor?).
+			    percorre = percorre->prox;
+			}
+			
+			ptos = ptos + percorre->inteiro;  //Acumula os pontos.
+			
+			i++;
+		} */
+		
+	}
+	else{  //Jogo normal.
+		//FODEO
+	}
+	
+	return vale;
+}
+
 int main(void){		
 //Declaração de variáveis------------------------------------------------	
 	int num_jogadores;  //Guarda o número de jogadores que estão participando.
 	int i;
-	int opcao;
+	int j;
+	int valida;
+	int opcao;  //Para usar em menus.
+	int opcao2;
 	int num;  //Guarda o número de pedras na pilha.
 	int p_um;  //Indica qual jogador será o primeiro.
+	char ins[70];  //Guarda as instruções da jogada.
 	PEDRA** jogadores;  //Trata-se de um vetor de ponteiros. Esse vetor guarda listas encadeadas que corres pondem as mãos de cada jogador.
 	PEDRA* pilha;  //Aponta para o primeiro elemento da pilha de pedras.
+	PEDRA* tab;  //Aponta para o primeiro elemento da pilha que corresponde ao tabuleiro.
 	PEDRA* novo;
 	
 //Atribuições e funções iniciais------------------------------------------------------------
-	inicializa_pilha(&pilha);	
+	inicializa_pilha(&pilha);
+	inicializa_pilha(&tab);
+	
+	for(i = 0; i < 70; i++){
+		ins[i] = '\0';
+	}
 	
 //Splash-screen----------------------------------------------------------
 	cabecalho();
@@ -348,14 +481,55 @@ int main(void){
 	for(i = 0; i < num_jogadores; i++){
 		cabecalho();
 		imprime_idv(jogadores, p_um);  //Mostra a mão do jogador atual.
-		printf("\n\n>>JOGADOR %d, escolha uma opção:\n", p_um);
+		printf("\n\n>>JOGADOR %d, escolha uma opcao:\n", p_um);
 		printf("(1)Baixar pedras\n");
 		printf("(2)Comprar pedra\n");
 		scanf("%d", &opcao);
 		
+		valida = 0;	
 		
 		switch(opcao){
 			case 1:
+				opcao2 = 0;
+				
+				while(opcao2 == 0){
+					while(valida == 0){
+					    cabecalho();
+					    imprime_idv(jogadores, p_um);
+					    imprime_tab(tab);  
+					    printf("\n\n>>JOGADOR %d, escolha as pedras que deseja baixar:\n", p_um);
+						
+						setbuf(stdin, NULL);
+					    fgets(ins, 70, stdin);  //Preenche a string de instruções.
+						
+					    valida = jogada(&tab, jogadores, p_um, ins, 0);  //~IMPLEMENTAR E VALIDAR A JOGADA~
+					    if(valida == 0){
+						    cabecalho();
+						    printf("\n\n##Essa jogada não foi valida. Tente novamente!\n");
+							getchar();
+							setbuf(stdin, NULL);
+					    }
+						
+					    for(j = 0; j < 70; j++){  //Limpa string.
+		                    ins[j] = '\0';
+	                    }
+					}
+					
+					imprime_tab(tab);
+					
+					printf("\n\n>>Deseja terminar a jogada?\n");
+					printf("(1)Sim\n");
+					printf("(2)Nao\n");
+					scanf("%d", &opcao2);
+					
+					if(opcao2 == 1){
+						opcao2 = 1;
+					}
+					else{
+						opcao2 = 0;
+					}
+					
+				}
 				
 				break;
 			case 2: //Compra e passa a vez.				
