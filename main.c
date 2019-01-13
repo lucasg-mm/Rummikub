@@ -251,17 +251,37 @@ void imprime_tab(PEDRA* tab){  //Imprime o tabuleiro.
 	return;
 }
 
-int jogada(PEDRA** tab, PEDRA** jogadores, int p_um, char* ins, int modo){  //##NOTA DO P: Separar a valida em uma função!
-	int numero;
-	int contador;
-	int ptos = 0;
-	int i = 0;
-	int j = 0;
+void exclui_mao(char nro, char cr, PEDRA** jogadores, int p_um){   //
+	PEDRA* percorre;
+	PEDRA* ant;
+	
+	percorre = jogadores[p_um - 1]; 
+	
+	while((percorre->numero != nro) && (percorre->cor != cr)){
+		ant = percorre;
+		percorre = percorre->prox;
+	}
+	
+	if(percorre == jogadores[p_um - 1]){  //Se tiver que remover o primeiro.
+		jogadores[p_um - 1] = percorre->prox;
+	}
+	else{  //Se não
+		ant->prox = percorre->prox;
+	}
+	free(percorre);
+	
+	return;
+}
+
+int jogada(PEDRA** tab, PEDRA** jogadores, int p_um, char* ins, int modo){  //#####NOTA DO P.: Separar a valida em uma função!
+	int ptos = 0;                                                           //#####NOTA DO P.: Estabelecer limitações de números de séries!
+	int i = 0;                                                              //#####NOTA DO P.: Programar o coringa!
+	int j = 0;                                                              //#####NOTA DO P.: Programar caso em que as pedras não existem!  
 	int vale;  //Diz se a jogada foi válida. 
 	int grupo = 0;
 	int seq = 0;
 	int quantos = 0;
-	PEDRA* percorre;
+	PEDRA* novo;
 	
 	while(ins[quantos] != '\n'){
 		quantos++;
@@ -331,24 +351,65 @@ int jogada(PEDRA** tab, PEDRA** jogadores, int p_um, char* ins, int modo){  //##
 		vale = grupo | seq;
 		
 		if(vale == 0){
-			return vale;  //Se a jogada for inválida.
+			cabecalho();
+            printf("\n\n##Essa jogada não foi valida. Tente novamente!\n");
+			getchar();
+			setbuf(stdin, NULL);
+			
+			return 0;  //Se a jogada for inválida. (RETORNA ZERO)
+		}                                          
+		
+		//-->Verifica a soma dos pontos (30 pontos no máximo):
+		i=0;
+		while(ins[i] != '\0'){
+			ptos = ptos + strtol(&ins[i], NULL, 16);
+			
+			i = i + 3;
 		}
 		
-		//Realiza a jogada (mexe nas listas)
-		/*while(ins[i] != '\n'){
-			percorre = jogadores[p_um - 1];
-			contador = 0;
-			numero = atoi(&ins[i]);
+		//-->Realiza a jogada (mexe nas listas)
+		i = 0;
+		while(ins[i] != '\0'){   
+			exclui_mao(ins[i], ins[i+1], jogadores, p_um);  //~FUNÇÃO PARA EXCLUIR DA MÃO.
 			
-			while(contador < numero){  //Chegar à pedra da instrução (como um vetor?).
-			    percorre = percorre->prox;
+			//Manipula a lista do tabuleiro.
+			
+			novo = (PEDRA*)calloc(1, sizeof(PEDRA));
+			if(novo == NULL){
+		        cabecalho();
+		        printf("##ERRO DE ALOCAÇÃO!!");
+		        getchar();
+		        exit(1);				
 			}
 			
-			ptos = ptos + percorre->inteiro;  //Acumula os pontos.
+			novo->inteiro = strtol(&ins[i], NULL, 16);
+			novo->numero = ins[i];
+			novo->cor = ins[i+1];
 			
-			i++;
-		} */
+			novo->prox = *tab;
+			*tab = novo;
+			
+			if(ins[i+3] == '\0'){
+			    novo = (PEDRA*)calloc(1, sizeof(PEDRA));
+			    if(novo == NULL){
+		            cabecalho();
+		            printf("##ERRO DE ALOCAÇÃO!!");
+		            getchar();
+		            exit(1);				
+			    }
+			
+			    novo->numero = 'X';
+			    novo->cor = 'X';
+				
+				novo->prox = *tab;
+				*tab = novo;
+			}
+			
+			i = i + 3;	
+		}
 		
+		
+		return ptos;
 	}
 	else{  //Jogo normal.
 		//FODEO
@@ -372,6 +433,7 @@ int main(void){
 	PEDRA* pilha;  //Aponta para o primeiro elemento da pilha de pedras.
 	PEDRA* tab;  //Aponta para o primeiro elemento da pilha que corresponde ao tabuleiro.
 	PEDRA* novo;
+	int* ptos;  //GUarda os pontos de cada jogador.
 	
 //Atribuições e funções iniciais------------------------------------------------------------
 	inicializa_pilha(&pilha);
@@ -393,6 +455,7 @@ int main(void){
 	
 //Cria a mão dos jogadores-----------------------------------------------	
 	jogadores = (PEDRA**)calloc(num_jogadores, sizeof(PEDRA*));
+	ptos = (int*)calloc(num_jogadores, sizeof(int));
 	
 	if(jogadores == NULL){
 		cabecalho();
@@ -496,25 +559,22 @@ int main(void){
 					while(valida == 0){
 					    cabecalho();
 					    imprime_idv(jogadores, p_um);
-					    imprime_tab(tab);  
+					    imprime_tab(tab);
+						setbuf(stdin, NULL);
 					    printf("\n\n>>JOGADOR %d, escolha as pedras que deseja baixar:\n", p_um);
 						
 						setbuf(stdin, NULL);
 					    fgets(ins, 70, stdin);  //Preenche a string de instruções.
 						
-					    valida = jogada(&tab, jogadores, p_um, ins, 0);  //~IMPLEMENTAR E VALIDAR A JOGADA~
-					    if(valida == 0){
-						    cabecalho();
-						    printf("\n\n##Essa jogada não foi valida. Tente novamente!\n");
-							getchar();
-							setbuf(stdin, NULL);
-					    }
+					    valida = jogada(&tab, jogadores, p_um, ins, 0);   
+						ptos[p_um - 1] = ptos[p_um - 1] + valida;						
 						
 					    for(j = 0; j < 70; j++){  //Limpa string.
 		                    ins[j] = '\0';
 	                    }
 					}
 					
+					valida = 0;
 					imprime_tab(tab);
 					
 					printf("\n\n>>Deseja terminar a jogada?\n");
@@ -524,6 +584,16 @@ int main(void){
 					
 					if(opcao2 == 1){
 						opcao2 = 1;
+						
+						if(ptos[p_um - 1] < 30){  //A primeira jogada tem que somar 30.
+							cabecalho();
+                            printf("\n\n##A primeira jogada precisa somar 30 pontos. Continue jogando!\n");
+							setbuf(stdin, NULL);
+			                getchar();
+			                setbuf(stdin, NULL);
+							
+							opcao2 = 0;
+						}
 					}
 					else{
 						opcao2 = 0;
