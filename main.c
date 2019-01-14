@@ -273,10 +273,28 @@ void exclui_mao(char nro, char cr, PEDRA** jogadores, int p_um){   //
 	return;
 }
 
+int existe(PEDRA** jogadores, int p_um, char nro, char cr){  //Verifica se a pedra que o jogador quer baixar existe em sua mão.	
+	PEDRA* percorre;
+	
+	percorre = jogadores[p_um - 1];
+	
+	while((percorre != NULL) && ((percorre->numero != nro) || (percorre->cor != cr))){
+		percorre = percorre->prox;
+	}
+	
+	if(percorre == NULL){
+		return 0;
+	}
+	else{
+		return 1;  //Achou!
+	}
+}
+
 int jogada(PEDRA** tab, PEDRA** jogadores, int p_um, char* ins, int modo){  //#####NOTA DO P.: Separar a valida em uma função!
-	int ptos = 0;                                                           //#####NOTA DO P.: Estabelecer limitações de números de séries!
-	int i = 0;                                                              //#####NOTA DO P.: Programar o coringa!
-	int j = 0;                                                              //#####NOTA DO P.: Programar caso em que as pedras não existem!  
+	int ptos = 0;
+	int flag;
+	int i = 0;
+	int j = 0;                                                              
 	int vale;  //Diz se a jogada foi válida. 
 	int grupo = 0;
 	int seq = 0;
@@ -287,64 +305,113 @@ int jogada(PEDRA** tab, PEDRA** jogadores, int p_um, char* ins, int modo){  //##
 		quantos++;
 	}
 	
-	if(modo == 0){  //Abertura.
+	if(modo == 0){  //Abertura.		
+		//Verifica se as pedras escolhidas estão dispoíveis na mão do jogador:
+		
+		while(ins[i] != '\0'){
+			flag = existe(jogadores, p_um, ins[i], ins[i+1]);
+			
+			if(flag == 0){
+			    cabecalho();
+                printf("\n\n##A jogada não foi valida, pois voce nao tem essas pedras. Tente novamente!\n");
+			    getchar();
+			    setbuf(stdin, NULL);
+			
+			    return 0;  //Se a jogada for inválida. (RETORNA ZERO)					
+			}
+			
+			i = i + 3;
+		}
+		
 		//Valida a jogada.
 		//-->Grupo:
 		
+		i = 0;
 		while(ins[i] != '\0'){  //Mesmo número, cores diferentes (min 3 / max 4).
-			if(ins[i] == ins[0]){  //Certifica a parte do "mesmo número".
-				grupo = 1;
+			if(ins[i] != '*'){
+			    if(ins[i] == ins[0]){  //Certifica a parte do "mesmo número".
+				    grupo = 1;
+			    }
+			    else{                                           
+				    grupo = 0;
+				    break;
+			    }
 			}
-			else{                                           
-				grupo = 0;
-				break;
-			}
+			
 			i = i + 3;
 		}
 		
 		//Certifica a parte do "cores diferentes".
 		if(grupo == 1){
 		    for(i = 1; i < quantos; i = i + 3){
-		        for(j = i + 3; j < quantos; j = j + 3){
-				    if(ins[i] != ins[j]){
-					    grupo = 1;
+				if(ins[i] != '*'){  //Se for curinga, ignora!
+		            for(j = i + 3; j < quantos; j = j + 3){
+				        if(ins[i] != ins[j]){
+					        grupo = 1;
+				        }
+				        else{
+					        grupo = 0;
+						    break;
+				        }
+			        }
+				    if(ins[i] == ins[j]){
+					    break;
 				    }
-				    else{
-					    grupo = 0;
-				    }
-			    }
+				}
 		    }
 		}
+		
+		if((grupo == 1) && ((quantos < 8) || (quantos > 11))){  //Limitação do número de pedras.
+			cabecalho();
+            printf("\n\n##Essa jogada não foi valida (lembre-se: no mínimo 3 pedras e no máximo 4). Tente novamente!\n");
+			getchar();
+			setbuf(stdin, NULL);
 			
+			return 0;  //Se a jogada for inválida. (RETORNA ZERO)			
+		}
+		
 		//-->Sequência:
 		//Certifica se têm cores iguais 
 		i = 1;
 		while(ins[i] != '\0'){
-			if(ins[1] == ins[i]){
-				seq = 1;
-			}
-			else{
-				seq = 0;
-				break;
-			}
-			i = i + 3;
-		}
-		
-		//Certifica a parte da "sequência numérica": 
-		
-		i = 0;
-		if(seq == 1){
-		    while(ins[i] != '\0'){  //Muda o condicional!!
-			    if((ins[i+3] == ins[i] + 1) || (ins[i+3] == '\0')){
+			if(ins[i] != '*'){
+			    if(ins[1] == ins[i]){
 				    seq = 1;
 			    }
 			    else{
 				    seq = 0;
 				    break;
-			    }
+			    } 
+			}
+			i = i + 3;
+		}
+		
+		//Certifica a parte da "sequência numérica":
+		
+		i = 0;
+		if(seq == 1){
+		    while(ins[i] != '\0'){  //Muda o condicional!!
+				if(ins[i] != '*'){
+			        if((ins[i+3] == ins[i] + 1) || (ins[i+3] == '\0')){
+				        seq = 1;
+			        }
+			        else{
+				        seq = 0;
+				        break;
+			        }
+				}		
 			    i = i + 3;
 		    }						
 		}
+		
+		if((seq == 1) && (quantos < 8)){  //Limitação do número de pedras.
+			cabecalho();
+            printf("\n\n##Essa jogada não foi valida (lembre-se: no mínimo 3). Tente novamente!\n");
+			getchar();
+			setbuf(stdin, NULL);
+			
+			return 0;  //Se a jogada for inválida. (RETORNA ZERO)			
+		}		
 				
 		//-->Por fim:
 		
@@ -362,7 +429,38 @@ int jogada(PEDRA** tab, PEDRA** jogadores, int p_um, char* ins, int modo){  //##
 		//-->Verifica a soma dos pontos (30 pontos no máximo):
 		i=0;
 		while(ins[i] != '\0'){
-			ptos = ptos + strtol(&ins[i], NULL, 16);
+			if(ins[i] != '*'){
+			    ptos = ptos + strtol(&ins[i], NULL, 16);
+			}
+			else{
+				if(i == 0){
+					 //Coringa no começo
+					if(strtol(&ins[i+3], NULL, 16) == (strtol(&ins[i+6], NULL, 16) + 1)){  //Uma sequência.
+						ptos = ptos + strtol(&ins[i+3], NULL, 16) - 1;							
+					}
+					if(strtol(&ins[i+3], NULL, 16) == strtol(&ins[i+6], NULL, 16)){  //Um grupo.
+						ptos = ptos + strtol(&ins[i+3], NULL, 16);
+					}
+				}		
+				if(i == (quantos - 2)){	//Coringa no fim	
+					if(strtol(&ins[i-3], NULL, 16) == (strtol(&ins[i-6], NULL, 16) + 1)){  //Uma sequencia
+						ptos = ptos + strtol(&ins[i-3], NULL, 16) + 1;
+					}
+						
+					if(strtol(&ins[i-3], NULL, 16) == strtol(&ins[i-6], NULL, 16)){  //Um grupo 
+						ptos = ptos + strtol(&ins[i-3], NULL, 16);
+					}		
+				}
+				if((i != quantos) && (i != 0)){  //Coringa no meio
+					if(strtol(&ins[i-3], NULL, 16) == (strtol(&ins[i+3], NULL, 16) + 2)){
+						ptos = ptos + strtol(&ins[i-3], NULL, 16) + 1;
+					}
+					
+					if(strtol(&ins[i-3], NULL, 16) == strtol(&ins[i+3], NULL, 16)){
+						ptos = ptos + strtol(&ins[i-3], NULL, 16);
+					}
+				}
+			}
 			
 			i = i + 3;
 		}
