@@ -548,11 +548,17 @@ int primeira_jogada(PEDRA** tab, PEDRA** jogadores, int p_um, char* ins) { //###
     return ptos;
 }
 
-int verifica(PEDRA** tab, PEDRA** jogadores, int p_um, char* ins){
+int verifica(PEDRA** tab, PEDRA** jogadores, int p_um, char* ins, int serie_dest){
 	int quantos = 0;
-	int i = 1;;
+	int i = 1;
+    int j;
+    int grupo = 0;
+    int seq = 0;
+    int vale;
 	int flag;
+    char flag2 = 'X';
     int serie_org;
+    PEDRA* percorre;
 	
     while(ins[quantos] != '\n') {
         quantos++;
@@ -564,13 +570,21 @@ int verifica(PEDRA** tab, PEDRA** jogadores, int p_um, char* ins){
 		}
 		if(ins[i-1] == 'T'){
             cabecalho();
-            printf("\n\nDe qual serie do tabuleiro a pedra %c%c se origina?\n", ins[i], ins[i+1]);
+            printf("\n\nDe qual serie do tabuleiro a pedra %c%c se origina?\n", ins[i], ins[i+1]);  
             setbuf(stdin, NULL);
+            
+            //##Testar se a serie de origem continua a ser uma serie. -->(RECURSÃO?)
             
             scanf("%d", &serie_org);
             
 			flag = existe_tab(tab, ins[i], ins[i+1], serie_org);
 		}
+        if(ins[i-1] == 'X'){
+            //Verificar se as pedras existem na serie especificada do tabuleiro
+            percorre = *tab;
+            
+            flag = existe_tab(tab, ins[i], ins[i+1], serie_dest);
+        }
 
         if(flag == 0) {
             cabecalho();
@@ -584,8 +598,121 @@ int verifica(PEDRA** tab, PEDRA** jogadores, int p_um, char* ins){
         i = i + 4;
     }
     
-    //Verifica
-	
+    //Verifica se é um grupo.
+    
+    j = 1; 
+    i = 1;
+    while(ins[i] != '\0') { //Mesmo número, cores diferentes (min 3 / max 4).
+        if((ins[j] != '*') && (flag2 == 'X')){
+            flag2 = ins[j];
+        }        
+        
+        if(ins[i] != '*') {
+            if(ins[i] == flag2) { //Certifica a parte do "mesmo número".
+                grupo = 1;
+            }
+            else {
+                grupo = 0;
+                break;
+            }
+        }
+
+        j = j + 4;
+        i = i + 4;
+    }
+    
+    //Certifica a parte do "cores diferentes".
+    if(grupo == 1) {
+        for(i = 2; i < quantos; i = i + 4) {
+            if(ins[i] != '*') { //Se for curinga, ignora!
+                for(j = i + 4; j < quantos; j = j + 4) {
+                    if(ins[i] != ins[j]) {
+                        grupo = 1;
+                    }
+                    else {
+                        grupo = 0;
+                        break;
+                    }
+                }
+                if(ins[i] == ins[j]) {
+                    break;
+                }
+            }
+        }
+    }
+    
+    if((grupo == 1) && ((quantos < 11) || (quantos > 15))) { //Limitação do número de pedras.
+        cabecalho();
+        printf("\n\n##Essa jogada não foi valida (lembre-se: no mínimo 3 pedras e no máximo 4). Tente novamente!\n");
+        getchar();
+        setbuf(stdin, NULL);
+
+        return 0;  //Se a jogada for inválida. (RETORNA ZERO)
+    }
+    
+    //-->Sequência:
+    //Certifica se têm cores iguais
+    i = 2;
+    j = 2;
+    flag2 = 'X';
+    while(ins[i] != '\0') {
+        if((ins[j] != '*') && (flag2 == 'X')){
+            flag2 = ins[j];
+        }
+        
+        if(ins[i] != '*') {
+            if(flag2 == ins[i]) {
+                seq = 1;
+            }
+            else {
+                seq = 0;
+                break;
+            }
+        }
+        i = i + 4;
+        j = j + 4;
+    }
+    
+    //Certifica a parte da "sequência numérica":
+
+    i = 1;
+    if(seq == 1) {
+        while(ins[i] != '\0') { //Muda o condicional!!
+            if(ins[i] != '*') {
+                if((strtol(&ins[i+4], NULL, 16) == strtol(&ins[i], NULL, 16) + 1) || (strtol(&ins[i+7], NULL, 16) == strtol(&ins[i], NULL, 16) + 2) || (ins[i+4] == '\0') || (strtol(&ins[i], NULL, 16) == strtol(&ins[i-3], NULL, 16) + 1) || (strtol(&ins[i], NULL, 16) == strtol(&ins[i-6], NULL, 16) + 2)) {
+                    seq = 1;
+                }
+                else {
+                    seq = 0;
+                    break;
+                }
+            }
+            i = i + 4;
+        }
+    }
+    
+    if((seq == 1) && (quantos < 11)) { //Limitação do número de pedras.
+        cabecalho();
+        printf("\n\n##Essa jogada não foi valida (lembre-se: no mínimo 3). Tente novamente!\n");
+        getchar();
+        setbuf(stdin, NULL);
+
+        return 0;  //Se a jogada for inválida. (RETORNA ZERO)
+    }
+
+    //-->Por fim:
+
+    vale = grupo | seq;
+
+    if(vale == 0) {
+        cabecalho();
+        printf("\n\n##Essa jogada não foi valida. Tente novamente!\n");
+        setbuf(stdin, NULL);
+        getchar();
+
+        return 0;  //Se a jogada for inválida. (RETORNA ZERO)
+    }
+    
 	return 42;
 }
 
@@ -618,19 +745,19 @@ void jogada(PEDRA** tab, PEDRA** jogadores, int p_um){
 		        cabecalho();
                 imprime_idv(jogadores, p_um);  //Mostra a mão do jogador atual.
 	            imprime_tab(*tab);
-                printf("\n\n>>Em qual serie deseja inserir?\n");
+                printf("\n\n>>Em qual serie deseja inserir?\n");  //Informação necessária para manipular os ponteiros
                 scanf("%d", &serie_dest);
                 setbuf(stdin, NULL);
 			
 			    cabecalho();
                 imprime_idv(jogadores, p_um);  //Mostra a mão do jogador atual.
 	            imprime_tab(*tab);
-                printf("\n\n>>Quais pedras deseja baixar?\n");
+                printf("\n\n>>Atualize a serie:\n");
                 fgets(ins, 70, stdin);
 			
 			//Verificação:
 			
-			    flag = verifica(tab, jogadores, p_um, ins);
+			    flag = verifica(tab, jogadores, p_um, ins, serie_dest);
                 
             }
 			
