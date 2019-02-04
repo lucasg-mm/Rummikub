@@ -11,6 +11,11 @@ typedef struct pedrinhas {
 
 } PEDRA;
 
+//PROTÓTIPOS:
+int verifica(PEDRA** tab, PEDRA** jogadores, int p_um, char* ins, int serie_dest, int modo);
+void monta_serie(char* ins, PEDRA** tab, int p_um, PEDRA** jogadores);
+void exclui_serie(PEDRA** tab, int serie);
+
 void cabecalho() {
     system("clear");
     printf("--------------------------------------------------------------------------------");
@@ -548,13 +553,242 @@ int primeira_jogada(PEDRA** tab, PEDRA** jogadores, int p_um, char* ins) { //###
     return ptos;
 }
 
-int verifica(PEDRA** tab, PEDRA** jogadores, int p_um, char* ins, int serie_dest){
+int permanece_serie(PEDRA** tab, char nro, char cr, int serie, PEDRA** jogadores, int p_um){  //Verifica se, ao dividir uma serie, ela permanece sendo serie...
+	char ins1[70];
+	char ins2[70];
+	char ins3[70];
+	char ins4[70];
+	char aux[70];
+	int flag1 = 1;
+	int flag2 = 1;
+	int flag3 = 1;
+	int flag4 = 1;
+	int flagz = 0;
+	int i;
+	int j;
+	int quantos = 0;
+	int opcao;
+	int opcao2;
+	
+	for(i = 0; i < 70; i++){
+		ins1[i] = '\0';
+		ins2[i] = '\0';
+		ins3[i] = '\0';
+		ins4[i] = '\0';
+		aux[i] = '\0';
+	}
+	
+	i = 0;
+	
+	PEDRA* percorre;
+	int contador = 0;
+	
+	percorre = *tab;
+    percorre = percorre->prox;
+	
+	while(contador < serie){
+		percorre = percorre->prox;
+		
+		if(percorre->numero == 'X'){
+			contador++;
+			percorre = percorre->prox;
+		}
+	}
+	
+    while((percorre != NULL) && (percorre->numero != 'X') && ((percorre->numero != nro) || (percorre->cor != cr))) {
+		ins1[i] = 'X';
+		ins1[i+1] = percorre->numero;
+		ins1[i+2] = percorre->cor;
+		ins1[i+3] = ' ';
+		i = i+4; 
+		
+        percorre = percorre->prox;
+		
+		if((percorre == NULL) || (percorre->numero == 'X') || ((percorre->numero == nro) && (percorre->cor == cr))){
+			ins1[i-1] = '\n';
+		}
+    }
+	
+	if(ins1[0] != '\0'){
+        i = 0;
+	    quantos = 0;
+	    while(ins1[i] != '\n'){
+		    quantos++;
+		    i++;
+	    }
+	
+	    for(i = 0; i < quantos; i++){
+		    aux[i] = ins1[i];
+	    }
+	
+	    j = quantos;  //CONTINUAR AQUI
+	    for(i = 0; i < quantos; i = i + 4){
+		    ins1[i] = aux[j-3];
+		    ins1[i+1] = aux[j-2];
+		    ins1[i+2] = aux[j-1];
+		    if(i != 0){
+		        ins1[i+3] = aux[j];
+		    }
+		    else{
+		        ins1[i+3] = ' ';
+		    }
+		
+		    j = j - 4;
+	    }
+	
+	    ins1[i-1] = '\n';
+	
+	    for(i = 0; i < 70; i++){
+		    aux[i] = '\0';
+	    }
+	}
+	
+	//--------------------
+	
+	if(ins1[0] != '\0'){
+		flag1 = verifica(NULL, NULL, 0, ins1, 0, 0);
+	}
+	
+	i = 0;
+	percorre = percorre->prox;
+	while((percorre != NULL) && (percorre->numero != 'X')) {
+		ins2[i] = 'X';
+		ins2[i+1] = percorre->numero;
+		ins2[i+2] = percorre->cor;
+		ins2[i+3] = ' ';
+		i = i+4; 
+		
+        percorre = percorre->prox;
+		
+		if((percorre == NULL) || (percorre->numero == 'X')){
+			ins2[i-1] = '\n';
+		}
+    }
+	
+	if(ins2[0] != '\0'){
+	    i = 0;
+	    quantos = 0;
+	    while(ins2[i] != '\n'){
+		    quantos++;
+		    i++;
+	    }
+	
+	    for(i = 0; i < quantos; i++){
+		    aux[i] = ins2[i];
+	    }
+	
+	    j = quantos;  //CONTINUAR AQUI
+	    for(i = 0; i < quantos; i = i + 4){
+		    ins2[i] = aux[j-3];
+		    ins2[i+1] = aux[j-2];
+		    ins2[i+2] = aux[j-1];
+		    if(i != 0){
+		        ins2[i+3] = aux[j];
+		    }
+		    else{
+		        ins2[i+3] = ' ';
+		    }
+		
+		    j = j - 4;
+	    }
+	
+	    ins2[i-1] = '\n';
+	}
+	
+	if(ins2[0] != '\0'){
+	    flag2 = verifica(NULL, NULL, 0, ins2, 0, 0);
+	}
+		
+	if((flag1 != 1) || (flag2 != 1)){
+        cabecalho();
+	    printf("\n>>Rearranjar a sequencia de origem?\n\n");
+		printf("\n(1)Sim\n");
+		printf("(2)Nao\n\n");
+		scanf("%d", &opcao);
+		
+		switch(opcao){
+			case 1:
+                cabecalho();
+	            printf("\n>>O que fazer?\n\n");
+		        printf("\n(1)Dividir pedras\n");  //bp
+		        printf("(2)Combinar pedras\n\n");  //Se só tiver uma pedra do tipo T
+		        scanf("%d", &opcao2);  
+				
+				switch(opcao2){
+					case 1 :
+				        if(flag1 != 1){
+                            cabecalho();
+							printf("\n>>Primeira metade até agora: %s\n\n", ins1);
+	                        printf("\n>>Reescreva a primeira metade da string:\n\n");
+							setbuf(stdin, NULL);
+							fgets(ins3, 70, stdin);
+							
+				            flag3 = verifica(NULL, NULL, 0, ins3, 0, 1);
+				        }
+				
+				        if(flag2 != 1){
+                            cabecalho();
+							printf("\n>>Primeira metade até agora: %s\n\n", ins2);
+	                        printf("\n>>Reescreva a segunda metade da string:\n\n");
+							setbuf(stdin, NULL);
+							fgets(ins4, 70, stdin);							
+					
+					        flag4 = verifica(NULL, NULL, 0, ins4, 0, 1);
+				        }
+				
+				        break;
+					case 2:
+						i = 0;
+						while(ins1[i] != '\n'){
+							i++;
+						}
+						
+						ins1[i] = ' ';
+						ins1[i+1] = '\0';
+						
+						flagz = 1;
+						strcat(ins1, ins2);   //Combinar strings. (acabar com o '\n')
+						break;
+				}
+				
+				if((flag3 == 1) && (flag4 == 1)){
+				    exclui_serie(tab, serie);
+					
+					if((ins3[0] != '\0') && (flagz == 0)){
+					    monta_serie(ins3, tab, p_um, jogadores);
+					}
+					if((ins4[0] != '\0') && (flagz == 0)){
+					    monta_serie(ins4, tab, p_um, jogadores);
+					}
+					
+					if(flagz == 1){
+						monta_serie(ins1, tab, p_um, jogadores);
+					}
+					
+                    return 1;
+				 }
+				 else{
+                     return 0;
+				 }
+			case 2:
+				
+				return 0;
+				break;
+		}
+	}
+	else{
+		return 1;
+	}	
+}
+
+int verifica(PEDRA** tab, PEDRA** jogadores, int p_um, char* ins, int serie_dest, int modo){  //sere_dest sendo um problema
 	int quantos = 0;
 	int i = 1;
     int j;
     int grupo = 0;
     int seq = 0;
     int vale;
+	int flag_z = 1;
 	int flag;
     char flag2 = 'X';
     int serie_org;
@@ -564,39 +798,52 @@ int verifica(PEDRA** tab, PEDRA** jogadores, int p_um, char* ins, int serie_dest
         quantos++;
     }
 	
-    while(ins[i] != '\0') {  //Verifica a existência
-		if(ins[i-1] == 'M'){
-            flag = existe(jogadores, p_um, ins[i], ins[i+1]);
-		}
-		if(ins[i-1] == 'T'){
-            cabecalho();
-            printf("\n\nDe qual serie do tabuleiro a pedra %c%c se origina?\n", ins[i], ins[i+1]);  
-            setbuf(stdin, NULL);
+        while(ins[i] != '\0') {  //Verifica a existência
+		    if(ins[i-1] == 'M'){
+                flag = existe(jogadores, p_um, ins[i], ins[i+1]);
+		    }
+		    if(ins[i-1] == 'T'){
+                cabecalho();
+                printf("\n\nDe qual serie do tabuleiro a pedra %c%c se origina?\n", ins[i], ins[i+1]);  
+                setbuf(stdin, NULL);
+			
+                scanf("%d", &serie_org);
             
-            //##Testar se a serie de origem continua a ser uma serie. -->(RECURSÃO?)
+			    flag = existe_tab(tab, ins[i], ins[i+1], serie_org);
+				
+				if(flag != 0){
+					flag_z = permanece_serie(tab, ins[i], ins[i+1], serie_org, jogadores, p_um);  
+				}
+		    }
+			if(modo == 1){
+                if(ins[i-1] == 'X'){
+                    //Verificar se as pedras existem na serie especificada do tabuleiro
+                    percorre = *tab;
             
-            scanf("%d", &serie_org);
-            
-			flag = existe_tab(tab, ins[i], ins[i+1], serie_org);
-		}
-        if(ins[i-1] == 'X'){
-            //Verificar se as pedras existem na serie especificada do tabuleiro
-            percorre = *tab;
-            
-            flag = existe_tab(tab, ins[i], ins[i+1], serie_dest);
+                    flag = existe_tab(tab, ins[i], ins[i+1], serie_dest);
+                }
+			}
+
+            if(flag == 0) {
+                cabecalho();
+                printf("\n\n##A jogada não foi valida, pois essas pedras não estão disponíveis. Tente novamente!\n");
+                setbuf(stdin, NULL);
+                getchar();
+
+                return 0;  //Se a jogada for inválida. (RETORNA ZERO)
+            }
+			
+			if(flag_z == 0) {
+                cabecalho();
+                printf("\n\n##A jogada não foi valida, pois voce desmanchou a serie de origem. Tente novamente!\n");
+                setbuf(stdin, NULL);
+                getchar();
+
+                return 0;  //Se a jogada for inválida. (RETORNA ZERO)
+            }
+
+            i = i + 4;
         }
-
-        if(flag == 0) {
-            cabecalho();
-            printf("\n\n##A jogada não foi valida, pois essas pedras não estão disponíveis. Tente novamente!\n");
-            setbuf(stdin, NULL);
-            getchar();
-
-            return 0;  //Se a jogada for inválida. (RETORNA ZERO)
-        }
-
-        i = i + 4;
-    }
     
     //Verifica se é um grupo.
     
@@ -679,7 +926,7 @@ int verifica(PEDRA** tab, PEDRA** jogadores, int p_um, char* ins, int serie_dest
     if(seq == 1) {
         while(ins[i] != '\0') { //Muda o condicional!!
             if(ins[i] != '*') {
-                if((strtol(&ins[i+4], NULL, 16) == strtol(&ins[i], NULL, 16) + 1) || (strtol(&ins[i+7], NULL, 16) == strtol(&ins[i], NULL, 16) + 2) || (ins[i+4] == '\0') || (strtol(&ins[i], NULL, 16) == strtol(&ins[i-3], NULL, 16) + 1) || (strtol(&ins[i], NULL, 16) == strtol(&ins[i-6], NULL, 16) + 2)) {
+                if((strtol(&ins[i+4], NULL, 16) == strtol(&ins[i], NULL, 16) + 1) || (strtol(&ins[i+8], NULL, 16) == strtol(&ins[i], NULL, 16) + 2) || (ins[i+4] == '\0') || (strtol(&ins[i], NULL, 16) == strtol(&ins[i-4], NULL, 16) + 1) || (strtol(&ins[i], NULL, 16) == strtol(&ins[i-8], NULL, 16) + 2)) {
                     seq = 1;
                 }
                 else {
@@ -704,20 +951,192 @@ int verifica(PEDRA** tab, PEDRA** jogadores, int p_um, char* ins, int serie_dest
 
     vale = grupo | seq;
 
-    if(vale == 0) {
-        cabecalho();
-        printf("\n\n##Essa jogada não foi valida. Tente novamente!\n");
-        setbuf(stdin, NULL);
-        getchar();
+    if(vale == 0) {		
+		if(modo == 1){  //Breakpoint here!
+            cabecalho();
+            printf("\n\n##Essa jogada não foi valida. Tente novamente!\n");
+            setbuf(stdin, NULL);
+            getchar();
+		}
 
         return 0;  //Se a jogada for inválida. (RETORNA ZERO)
     }
     
-	return 42;
+	return 1;
 }
 
-void jogada(PEDRA** tab, PEDRA** jogadores, int p_um){
+int contabiliza(char* ins){
+	int ptos = 0;
+	int i;
+	int quantos;
+	
+	quantos = 0;
+    i=0;
+	
+    while(ins[quantos] != '\n') {
+        quantos++;
+    }
+	
+    while(ins[i] != '\0') {		
+		if(ins[i] == 'M'){
+			i++;
+            if(ins[i] != '*') {
+                ptos = ptos + strtol(&ins[i], NULL, 16);
+            }
+            else {
+                if(i == 0) {
+                    //Coringa no começo
+                   if(strtol(&ins[i+4], NULL, 16) == (strtol(&ins[i+8], NULL, 16) + 1)) { //Uma sequência.
+                       ptos = ptos + strtol(&ins[i+4], NULL, 16) - 1;
+                   }
+                   if(strtol(&ins[i+4], NULL, 16) == strtol(&ins[i+8], NULL, 16)) { //Um grupo.
+                       ptos = ptos + strtol(&ins[i+4], NULL, 16);
+                   }
+                }
+                if(i == (quantos - 2)) {	//Coringa no fim
+                    if(strtol(&ins[i-4], NULL, 16) == (strtol(&ins[i-8], NULL, 16) + 1)) { //Uma sequencia
+                        ptos = ptos + strtol(&ins[i-4], NULL, 16) + 1;
+                    }
+
+                    if(strtol(&ins[i-4], NULL, 16) == strtol(&ins[i-8], NULL, 16)) { //Um grupo
+                        ptos = ptos + strtol(&ins[i-4], NULL, 16);
+                    }
+                }
+                if((i != quantos) && (i != 0)) { //Coringa no meio
+                    if(strtol(&ins[i+4], NULL, 16) == (strtol(&ins[i-4], NULL, 16) + 2)) {
+                        ptos = ptos + strtol(&ins[i-4], NULL, 16) + 1;
+                    }
+
+                    if(strtol(&ins[i-4], NULL, 16) == strtol(&ins[i+4], NULL, 16)) {
+                        ptos = ptos + strtol(&ins[i-4], NULL, 16);
+                    }
+                }
+            }
+			i--;
+		}
+
+        i = i + 4;
+    }
+
+	return ptos;
+}
+
+void monta_serie(char* ins, PEDRA** tab, int p_um, PEDRA** jogadores){
+	int i;
+	PEDRA* novo;
+	
+    i = 1;
+    while(ins[i] != '\0') {
+		if(ins[i-1] == 'M'){  //Exclui somente os da mão.
+            exclui_mao(ins[i], ins[i+1], jogadores, p_um);  //~FUNÇÃO PARA EXCLUIR DA MÃO.		
+		}
+		
+        //Manipula a lista do tabuleiro.
+
+        novo = (PEDRA*)calloc(1, sizeof(PEDRA));
+        if(novo == NULL) {
+            cabecalho();
+            printf("##ERRO DE ALOCAÇÃO!!");
+            getchar();
+            exit(1);
+        }
+
+        novo->inteiro = strtol(&ins[i], NULL, 16);
+        novo->numero = ins[i];
+        novo->cor = ins[i+1];
+
+        novo->prox = *tab;
+        *tab = novo;
+
+        if(ins[i+3] == '\0') {
+            novo = (PEDRA*)calloc(1, sizeof(PEDRA));
+            if(novo == NULL) {
+                cabecalho();
+                printf("##ERRO DE ALOCAÇÃO!!");
+                getchar();
+                exit(1);
+            }
+
+            novo->numero = 'X';
+            novo->cor = 'X';
+
+            novo->prox = *tab;
+            *tab = novo;
+        }
+
+        i = i + 4;
+    }	
+	return;
+}
+
+void exclui_serie(PEDRA** tab, int serie){  //Exclui uma serie por completo.
+	PEDRA* percorre;
+	PEDRA* percorre2;
+	PEDRA* percorre3;
+	PEDRA* percorre4;
+	int contador = 0;
+	int flag = 0;
+	
+	percorre = *tab;
+	percorre2 = *tab; 
+	
+	if(contador != serie){
+		percorre = percorre->prox;
+	    percorre2 = percorre2->prox;
+		
+	    while(contador < serie){  //E se eu desejo alterar a primeira série? (e a última?)
+		    percorre = percorre->prox;
+		
+		    if(percorre->prox->numero == 'X'){
+			    contador++;
+		    }
+	    }
+		flag = 1;
+	}
+	//"Percorre" agora aponta para o ultimo elemento antes da serie a ser excluida.
+	
+	contador = 0;
+	
+	while(contador < (serie+1)){  //Não se tem certeza se essa "série + 1" existe...
+		percorre2 = percorre2->prox;
+		
+		if(percorre2 == NULL){
+			break;
+		}
+		
+		if(percorre2->numero == 'X'){
+			contador++;
+		}
+	}	
+	
+	if(flag == 1){
+	    percorre4 = percorre->prox;
+	}else{
+		percorre4 = percorre;
+	}
+	
+	percorre3 = percorre4;
+	
+	while(percorre4 != percorre2){
+		percorre3 = percorre4;
+		free(percorre3);
+		
+		if(percorre4 != NULL){
+		    percorre4 = percorre4->prox;
+		}
+	}
+	if(flag == 1){
+	    percorre->prox = percorre2;
+	}else{
+		*tab = percorre2;
+	}
+	
+	return;
+}
+
+int jogada(PEDRA** tab, PEDRA** jogadores, int p_um){  //Retorna os pontos da jogada.
     int opcao;
+	int ptos;
 	int flag = 0;
 	int opcao2;
     int i;
@@ -731,7 +1150,7 @@ void jogada(PEDRA** tab, PEDRA** jogadores, int p_um){
     imprime_idv(jogadores, p_um);  //Mostra a mão do jogador atual.
 	imprime_tab(*tab);
     printf("\n\n>>JOGADOR %d, escolha uma opcao:\n", p_um);
-    printf("(1)Inserir pedras numa serie ja existente\n");
+    printf("(1)Adicionar pedras a uma serie\n");
     printf("(2)Criar uma nova serie\n");
     scanf("%d", &opcao);	
 	
@@ -757,25 +1176,34 @@ void jogada(PEDRA** tab, PEDRA** jogadores, int p_um){
 			
 			//Verificação:
 			
-			    flag = verifica(tab, jogadores, p_um, ins, serie_dest);
+			    flag = verifica(tab, jogadores, p_um, ins, serie_dest, 1);
                 
             }
 			
-			//Alcançando a serie:
+			ptos = contabiliza(ins);  //Contabiliza os pontos da jogada.
 			
-			//Manipulando as listas:
+			exclui_serie(tab, serie_dest);  //Excluindo a serie:
 			
 			break;
 		case 2:
-			cabecalho();
-            imprime_idv(jogadores, p_um);  //Mostra a mão do jogador atual.
-	        imprime_tab(*tab);
-            printf("\n\n>>Quais pedras deseja baixar?\n");
-            fgets(ins, 70, stdin);			
+			while(flag == 0){
+                for(i = 0; i < 70; i++){
+                    ins[i] = '\0';    
+                }			
 			
-			//Verificação:
+			    cabecalho();
+                imprime_idv(jogadores, p_um);  //Mostra a mão do jogador atual.
+	            imprime_tab(*tab);
 			
-			//Manipulando as listas:
+			    setbuf(stdin, NULL);
+			
+                printf("\n\n>>Quais pedras deseja baixar?\n");
+                fgets(ins, 70, stdin);			
+			
+			    flag = verifica(tab, jogadores, p_um, ins, 0, 0);
+			}
+			
+			ptos = contabiliza(ins);
 			
 			break;
 		default:
@@ -784,7 +1212,9 @@ void jogada(PEDRA** tab, PEDRA** jogadores, int p_um){
 			break;
 	}
 	
-	return;
+	monta_serie(ins, tab, p_um, jogadores);
+	
+	return ptos;
 }
 
 int main(void) {
@@ -792,6 +1222,7 @@ int main(void) {
     int num_jogadores;  //Guarda o número de jogadores que estão participando.
     int i;
     int j;
+	int k;
     int valida;
     int opcao;  //Para usar em menus.
     int opcao2;
@@ -805,6 +1236,7 @@ int main(void) {
     PEDRA* novo;
     int* ptos;  //GUarda os pontos de cada jogador.
     int ganhou = 0;
+	int maior = 0;
 
 //Atribuições e funções iniciais------------------------------------------------------------
     inicializa_pilha(&pilha);
@@ -1022,7 +1454,7 @@ int main(void) {
 
             switch(opcao) {
             case 1:
-                jogada(&tab, jogadores, p_um);  //JOGAR
+                ptos[p_um - 1] = jogada(&tab, jogadores, p_um) + ptos[p_um - 1];  //JOGAR
 
                 break;
 
@@ -1052,7 +1484,27 @@ int main(void) {
                 break;
             }
 
-            //**NOTA DO P.: FUNÇÃO PARA DETECTAR VITÓRIA.
+            //**NOTA DO P.: DETECTAR VITÓRIA. (se ganhou, ganhou == 1), e então break
+			
+			if((jogadores[p_um - 1] == NULL) || (pilha == NULL)){
+				if(pilha == NULL){
+					//Ganha aquele com mais pontos.
+					
+					for(j = 0; j < num_jogadores; j++){
+						for(k = 0; k < num_jogadores; k++){
+							if(ptos[j] >= ptos[k]){  //Complexidade quadrática.
+								maior++;
+							}
+						}
+						if(maior == 4){
+							p_um = j;
+						}
+					}
+				}
+				
+				ganhou = 1;
+				break;
+			}
 
             if(p_um < num_jogadores) {
                 p_um++;
@@ -1063,9 +1515,16 @@ int main(void) {
         }
     }
 //-----------------------------------------------------------------------
-//Dá free nas listas e exibe mensagem de vitória (FIM).
-
+//Exibe mensagem de vitória (FIM).
+	cabecalho();
+    printf("\n\n>>O JOGADOR %d venceu!\n", p_um);
+	setbuf(stdin, NULL);
+	getchar();
+	
 //-----------------------------------------------------------------------
-
+//Dá free nas listas.	
+    //Código dócil
+	
+//	
     return 0;
 }
