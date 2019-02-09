@@ -127,7 +127,8 @@ void embaralha(PEDRA** pilha, int num) { //Passa as pedras para um array; Embara
 
         aleatorio[i]->prox = aleatorio[i+1];
     }
-
+    
+	free(aleatorio);
     return;
 }
 
@@ -1557,7 +1558,6 @@ int main(void) {
                 ganhou = 1;
                 break;
             }
-
             if(p_um < num_jogadores) {
                 p_um++;
             }
@@ -1565,7 +1565,7 @@ int main(void) {
                 p_um = 1;
             }
         }
-    }
+    } 
 //-----------------------------------------------------------------------
 //Exibe mensagem de vitória (FIM).
     cabecalho();
@@ -1577,8 +1577,9 @@ int main(void) {
 //Dá free nas listas.
     libera_jogadores(jogadores, num_jogadores);
 	libera_pilha_tab(&tab);
-	libera_pilha_tab(&pilha);	
-
-//
+	libera_pilha_tab(&pilha);
+	free(jogadores);
+	free(ptos);
+	
     return 0;
 }
