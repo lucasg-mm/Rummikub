@@ -490,7 +490,6 @@ int aglutina(PEDRA** tab, char nro, char cr, int serie, PEDRA** jogadores, int p
     char ins2[70];
     int i;
     int j;
-    int quantos = 0;
 
     limpa_string(ins1, 70);
     limpa_string(ins2, 70);
@@ -715,11 +714,10 @@ void exclui_serie(PEDRA** tab, int serie) { //Exclui uma serie por completo.
 
     while(percorre4 != percorre2) {
         percorre3 = percorre4;
-        free(percorre3);
-
         if(percorre4 != NULL) {
-            percorre4 = percorre4->prox;
-        }
+            percorre4 = percorre4->prox; //Alteração aqui!
+        }		
+        free(percorre3);
     }
     if(flag == 1) {
         percorre->prox = percorre2;
@@ -732,14 +730,10 @@ void exclui_serie(PEDRA** tab, int serie) { //Exclui uma serie por completo.
 
 int ret_ext(PEDRA** tab, int modo, int serie, PEDRA** jogadores, int p_um, int* total_series) {  //Retira da extremidade
     char ins[70];
-	char aux[70];
-	int quantos;
     int i;
 	int j;
 
-    for(i = 0; i < 70; i++) {
-        ins[i] = '\0';
-    }
+    limpa_string(ins, 70);
 
     PEDRA* percorre;
     int contador = 0;
@@ -937,16 +931,12 @@ int jogada(PEDRA** tab, PEDRA** jogadores, int p_um, int* baixou, int* total_ser
     int opcao;
     int ptos;
     int opcao2;
-	int opcao3;
     int i;
     int serie_dest;  //Só importa na hora de conectar as series
     char ins[70];
-    PEDRA* percorre;
     char uni[10];
     int modo;
 	int flag = 0; 
-
-    percorre = jogadores[p_um - 1];
 
     cabecalho();
     imprime_idv(jogadores, p_um);  //Mostra a mão do jogador atual.
@@ -1284,7 +1274,7 @@ int main(void) {
     PEDRA* pilha;  //Aponta para o primeiro elemento da pilha de pedras.
     PEDRA* tab;  //Aponta para o primeiro elemento da pilha que corresponde ao tabuleiro.
     PEDRA* novo;
-    int* ptos;  //GUarda os pontos de cada jogador.
+    int* ptos;  //Guarda os pontos de cada jogador.
     int ganhou = 0;
     int maior = 0;
 	int validou = 1;
